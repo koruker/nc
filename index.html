@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NC Sync">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#10141a">
+<title>NC Sync Editör — Kayar Otomat Senkron Kontrol</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%2310141a'/%3E%3Ctext x='50' y='64' font-size='40' text-anchor='middle' fill='%23f2a93b' font-family='monospace' font-weight='bold'%3ENC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#10141a;
+    --bg-panel:#161c23;
+    --bg-elevated:#1c232b;
+    --bg-toolbar:#131920;
+    --border:#262f39;
+    --border-soft:#1e2630;
+    --text:#dce3ea;
+    --text-dim:#85909c;
+    --text-faint:#525d68;
+    --accent:#f2a93b;
+    --accent-dim:#7a5624;
+    --accent-glow:rgba(242,169,59,.35);
+    --danger:#ef6a63;
+    --danger-dim:#3a2320;
+    --ok:#5fc78f;
+    --mono:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --line-h:20px;
+    --pad-top:6px;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior:none;
+  }
+  body{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    height:100dvh;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  button{font-family:var(--sans);cursor:pointer;}
+  input{font-family:var(--sans);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    flex:none;
+    background:var(--bg-toolbar);
+    border-bottom:1px solid var(--border);
+  }
+  .row1{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-right:auto;
+    min-width:0;
+  }
+  .brand .mark{
+    font-family:var(--mono);
+    font-weight:700;
+    color:var(--accent);
+    font-size:14px;
+    letter-spacing:.5px;
+    flex:none;
+  }
+  .brand .title{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .brand .subtitle{
+    font-size:10.5px;
+    color:var(--text-faint);
+    white-space:nowrap;
+    display:none;
+  }
+  @media(min-width:560px){ .brand .subtitle{display:inline;} }
+
+  .hbtn{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-size:11.5px;
+    font-weight:600;
+    padding:7px 10px;
+    border-radius:var(--radius);
+    display:flex;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+    transition:border-color .15s, color .15s;
+  }
+  .hbtn:hover{color:var(--text);border-color:#38424e;}
+  .hbtn.icon-only{padding:7px 8px;}
+
+  .row2{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 12px;
+    border-top:1px solid var(--border-soft);
+    flex-wrap:wrap;
+  }
+  .sync-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    padding:6px 10px 6px 8px;
+    border-radius:999px;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.4px;
+    color:var(--text-dim);
+    transition:border-color .15s,color .15s,background .15s;
+  }
+  .sync-toggle .lamp{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--text-faint);
+    flex:none;
+    transition:background .15s, box-shadow .15s;
+  }
+  .sync-toggle.active{
+    color:var(--accent);
+    border-color:var(--accent-dim);
+    background:rgba(242,169,59,.08);
+  }
+  .sync-toggle.active .lamp{
+    background:var(--accent);
+    box-shadow:0 0 8px var(--accent-glow);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .sync-toggle.active .lamp{animation:none;} }
+  @keyframes pulse{
+    0%,100%{opacity:1;} 50%{opacity:.45;}
+  }
+
+  .pattern-field{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:10.5px;
+    color:var(--text-faint);
+  }
+  .pattern-field input{
+    width:96px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:11.5px;
+    padding:5px 7px;
+    border-radius:var(--radius);
+  }
+  .pattern-field input.err{border-color:var(--danger);color:var(--danger);}
+
+  .sync-summary{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-left:auto;
+    font-size:11px;
+  }
+  #matchSummary{
+    background:none;border:none;color:var(--text-dim);
+    font-size:11px;font-weight:600;
+    padding:4px 2px;
+    text-decoration:underline dotted;
+    text-underline-offset:3px;
+  }
+  #matchSummary.error{color:var(--danger);}
+  #warnBadge{
+    background:var(--danger-dim);
+    color:var(--danger);
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:999px;
+  }
+  .info-btn{
+    background:none;border:1px solid var(--border);color:var(--text-faint);
+    width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .mobile-view-switch{
+    display:none;
+    gap:2px;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:2px;
+  }
+  .mobile-view-switch button{
+    background:none;border:none;color:var(--text-faint);
+    font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:4px;
+  }
+  .mobile-view-switch button.active{background:var(--accent-dim);color:#1a1005;}
+  @media(max-width:640px){ .mobile-view-switch{display:flex;} }
+
+  /* ---------- SYNC DETAILS PANEL ---------- */
+  #syncDetails{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .2s ease;
+    background:var(--bg-elevated);
+    border-top:1px solid var(--border-soft);
+  }
+  #syncDetails.open{max-height:180px; overflow-y:auto;}
+  #syncDetails .inner{padding:8px 12px;}
+  .match-row,.warn-row{
+    display:flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;
+    padding:4px 0;
+    border-bottom:1px dashed var(--border-soft);
+  }
+  .match-row .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+  .match-row .match-label{color:var(--text-dim);flex:1;}
+  .mini-btn{
+    background:var(--bg-panel);border:1px solid var(--border);color:var(--accent);
+    font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;
+  }
+  .warn-row{color:var(--danger);}
+  #matchList:empty::after,#warnList:empty::after{
+    content:'—';color:var(--text-faint);
+  }
+
+  /* ---------- MAIN GRID ---------- */
+  main{flex:1;min-height:0;}
+  #mainGrid{
+    height:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--border);
+    transition:background .2s, box-shadow .2s;
+  }
+  #mainGrid.sync-active{
+    background:var(--accent-dim);
+    box-shadow:0 0 16px -4px var(--accent-glow) inset;
+  }
+  @media(max-width:640px){
+    #mainGrid[data-mobile-view="a"],#mainGrid[data-mobile-view="b"]{grid-template-columns:1fr;}
+  }
+  #mainGrid[data-mobile-view="a"] .pane-b,
+  #mainGrid[data-mobile-view="b"] .pane-a{
+    display:none;
+  }
+
+  .pane{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    background:var(--bg-panel);
+  }
+  .pane-toolbar{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 8px;
+    background:var(--bg-toolbar);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .pane-toolbar input.fname{
+    flex:1;
+    min-width:0;
+    background:transparent;
+    border:1px solid transparent;
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:11.5px;
+    font-weight:600;
+    padding:4px 5px;
+    border-radius:4px;
+  }
+  .pane-toolbar input.fname:hover,.pane-toolbar input.fname:focus{
+    border-color:var(--border);background:var(--bg-elevated);
+  }
+  .pane-toolbar .pbtn{
+    flex:none;
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-size:14px;
+    width:28px;height:28px;
+    border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pane-toolbar .pbtn:hover{color:var(--text);border-color:#38424e;}
+
+  .editor-wrap{
+    position:relative;
+    flex:1;
+    min-height:0;
+    display:flex;
+  }
+  .gutter{
+    flex:none;
+    width:44px;
+    overflow:hidden;
+    background:var(--bg-toolbar);
+    border-right:1px solid var(--border-soft);
+    color:var(--text-faint);
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:var(--line-h);
+    padding-top:var(--pad-top);
+    text-align:right;
+    white-space:pre;
+    user-select:none;
+  }
+  .gutter-inner{padding-right:8px;}
+  .hl-wrap{
+    position:absolute;
+    top:0;bottom:0;left:44px;right:0;
+    overflow:hidden;
+    pointer-events:none;
+    padding-top:var(--pad-top);
+  }
+  .hl-inner{position:absolute;top:0;left:0;right:0;will-change:transform;}
+  .hl-bar{
+    position:absolute;left:0;right:0;
+    height:20px;
+    opacity:.28;
+  }
+  textarea.editor{
+    position:absolute;
+    top:0;bottom:0;left:44px;right:0;
+    width:calc(100% - 44px);
+    height:100%;
+    resize:none;
+    border:none;
+    outline:none;
+    background:transparent;
+    color:var(--text);
+    caret-color:var(--accent);
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:var(--line-h);
+    padding:var(--pad-top) 10px 10px 10px;
+    white-space:pre;
+    overflow:auto;
+    z-index:2;
+  }
+  textarea.editor::selection{background:rgba(242,169,59,.25);}
+
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:var(--bg-panel);}
+  ::-webkit-scrollbar-thumb{background:#2c3541;border-radius:6px;border:2px solid var(--bg-panel);}
+  ::-webkit-scrollbar-thumb:hover{background:#3a4451;}
+
+  /* ---------- STATUS BAR ---------- */
+  footer{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:6px 12px;
+    background:var(--bg-toolbar);
+    border-top:1px solid var(--border);
+    font-size:10.5px;
+    color:var(--text-faint);
+    font-family:var(--mono);
+  }
+  footer .sep{width:1px;height:12px;background:var(--border);}
+  footer .grow{flex:1;}
+  #autosaveInfo{color:var(--text-faint);}
+
+  /* ---------- MODALS ---------- */
+  .modal-backdrop{
+    position:fixed;inset:0;
+    background:rgba(6,8,10,.6);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:50;
+    padding:16px;
+  }
+  .modal-backdrop.open{display:flex;}
+  .modal{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:10px;
+    width:100%;
+    max-width:420px;
+    max-height:80vh;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--border-soft);
+  }
+  .modal-head h2{margin:0;font-size:14px;font-weight:700;color:var(--text);}
+  .modal-close{background:none;border:none;color:var(--text-faint);font-size:18px;line-height:1;}
+  .modal-body{padding:14px 16px;overflow-y:auto;}
+  .modal-body p{font-size:12.5px;line-height:1.6;color:var(--text-dim);margin:0 0 10px;}
+  .modal-body input[type=text]{
+    width:100%;background:var(--bg-panel);border:1px solid var(--border);
+    color:var(--text);font-size:13px;padding:9px 10px;border-radius:6px;
+    font-family:var(--sans);
+  }
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border-soft);}
+  .btn-primary{
+    background:var(--accent);color:#1a1005;border:none;font-weight:700;
+    padding:9px 16px;border-radius:6px;font-size:12.5px;
+  }
+  .btn-secondary{
+    background:none;border:1px solid var(--border);color:var(--text-dim);
+    padding:9px 14px;border-radius:6px;font-size:12.5px;
+  }
+  .proj-row{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 0;border-bottom:1px solid var(--border-soft);
+  }
+  .proj-row .pname{flex:1;min-width:0;}
+  .proj-row .pname .n{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .proj-row .pname .d{font-size:10.5px;color:var(--text-faint);}
+  .proj-row button{flex:none;}
+  #libraryList:empty::after{
+    content:'Henüz kayıtlı proje yok.';
+    color:var(--text-faint);font-size:12.5px;
+  }
+
+  /* ---------- TOAST ---------- */
+  #toast{
+    position:fixed;
+    left:50%;bottom:calc(20px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(10px);
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:12px;
+    padding:9px 16px;
+    border-radius:999px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, transform .2s;
+    z-index:80;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .hidden-input{display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="row1">
+    <div class="brand">
+      <span class="mark">●NC</span>
+      <span class="title">NC Sync Editör</span>
+      <span class="subtitle">Kayar Otomat Senkron Kontrol</span>
+    </div>
+    <button class="hbtn" id="btnLibrary">📁 Kütüphane</button>
+    <button class="hbtn" id="btnSaveProject">💾 Kaydet</button>
+    <button class="hbtn icon-only" id="btnNewProject" title="Yeni proje">＋</button>
+  </div>
+  <div class="row2">
+    <button class="sync-toggle" id="btnSyncMode" aria-pressed="false">
+      <span class="lamp"></span> SENKRON MOD
+    </button>
+    <div class="pattern-field">
+      <span>kod</span>
+      <input type="text" id="patternInput" value="M5\d{2}" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="mobile-view-switch" id="mobileViewSwitch">
+      <button data-view="a">A</button>
+      <button data-view="both" class="active">A|B</button>
+      <button data-view="b">B</button>
+    </div>
+    <div class="sync-summary">
+      <button id="matchSummary">0 eşleşme</button>
+      <span id="warnBadge" hidden>⚠ 0</span>
+      <button class="info-btn" id="btnInfo" title="Bilgi">i</button>
+    </div>
+  </div>
+  <div id="syncDetails">
+    <div class="inner">
+      <div id="matchList"></div>
+      <div id="warnList" style="margin-top:6px;"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="mainGrid" data-mobile-view="both">
+    <section class="pane pane-a">
+      <div class="pane-toolbar">
+        <input class="fname" id="fileNameA" value="PROGRAM_A.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="pbtn" id="btnImportA" title="Aç (.nc yükle)">📂</button>
+        <button class="pbtn" id="btnExportA" title="İndir (.nc)">⬇</button>
+        <input type="file" id="fileInputA" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
+      </div>
+      <div class="editor-wrap">
+        <div class="gutter" id="gutterA"><div class="gutter-inner" id="gutterInnerA"></div></div>
+        <div class="hl-wrap"><div class="hl-inner" id="hlInnerA"></div></div>
+        <textarea class="editor" id="editorA" wrap="off" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"></textarea>
+      </div>
+    </section>
+    <section class="pane pane-b">
+      <div class="pane-toolbar">
+        <input class="fname" id="fileNameB" value="PROGRAM_B.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="pbtn" id="btnImportB" title="Aç (.nc yükle)">📂</button>
+        <button class="pbtn" id="btnExportB" title="İndir (.nc)">⬇</button>
+        <input type="file" id="fileInputB" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
+      </div>
+      <div class="editor-wrap">
+        <div class="gutter" id="gutterB"><div class="gutter-inner" id="gutterInnerB"></div></div>
+        <div class="hl-wrap"><div class="hl-inner" id="hlInnerB"></div></div>
+        <textarea class="editor" id="editorB" wrap="off" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"></textarea>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span id="lineInfoA">A: Satır 1/1</span>
+  <span class="sep"></span>
+  <span id="lineInfoB">B: Satır 1/1</span>
+  <span class="grow"></span>
+  <span id="autosaveInfo">Taslak yüklendi</span>
+</footer>
+
+<!-- Save-as modal -->
+<div class="modal-backdrop" id="modalSaveAs">
+  <div class="modal">
+    <div class="modal-head"><h2>Projeyi kaydet</h2><button class="modal-close" data-close>×</button></div>
+    <div class="modal-body">
+      <p>Kütüphaneye kaydedilecek proje adını girin. Her iki dosyanın içeriği ve senkron kod deseni birlikte saklanır.</p>
+      <input type="text" id="projectNameInput" placeholder="Örn. Parça 4821 - Ana/Karşı Mil">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close>Vazgeç</button>
+      <button class="btn-primary" id="btnConfirmSave">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Library modal -->
+<div class="modal-backdrop" id="modalLibrary">
+  <div class="modal">
+    <div class="modal-head"><h2>Proje kütüphanesi</h2><button class="modal-close" data-close>×</button></div>
+    <div class="modal-body">
+      <div id="libraryList"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close>Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal -->
+<div class="modal-backdrop" id="modalInfo">
+  <div class="modal">
+    <div class="modal-head"><h2>Nasıl çalışır</h2><button class="modal-close" data-close>×</button></div>
+    <div class="modal-body">
+      <p><strong>Senkron mod:</strong> Açıkken her iki dosyada da kod deseniyle eşleşen satırlar (varsayılan <code>M5\d{2}</code>, yani M500–M599) bulunur ve aynı koda sahip satırlar birbirine eşlenir. Bir tarafı kaydırdığınızda diğer taraf, en yakın senkron noktalarına göre orantılı olarak kaydırılır ve eşleşen satır aynı yükseklikte hizalanır. Mod kapalıyken iki panel bağımsız kayar.</p>
+      <p><strong>Eşleşme/uyarı listesi:</strong> "eşleşme" sayısına dokunarak açılır. Bir koddan bir tarafta farklı sayıda varsa (ör. solda 2, sağda 1) bu uyarı olarak listelenir — programı devreye almadan önce kontrol edin.</p>
+      <p><strong>Makineye gönderme:</strong> Tarayıcı, güvenlik nedeniyle doğrudan CNC'nin RS232/Ethernet DNC hattına bağlanamaz. "⬇" ile dosyayı indirip her zamanki USB/DNC yönteminizle makineye aktarın. Masaüstü Chrome/Edge gibi Web Serial destekleyen tarayıcılarda, bir seri-DNC kablonuz varsa deneysel doğrudan gönderim düğmesi de görünür.</p>
+      <p><strong>Kütüphane:</strong> Projeler bu cihazın tarayıcısında saklanır (localStorage). Farklı bir cihaza taşımak için dosyaları ayrı ayrı .nc olarak indirip diğer cihazda içe aktarabilirsiniz.</p>
+    </div>
+    <div class="modal-actions"><button class="btn-secondary" data-close>Kapat</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // keep in sync with CSS --line-h / --pad-top
+  var LINE_HEIGHT = 20;
+  var PAIR_COLORS = ['#5ec8d8','#c792ea','#82d99f','#f5a97f','#f28fb1','#8fb4f2'];
+  var LS_PROJECTS = 'ncsync_projects_v1';
+  var LS_DRAFT = 'ncsync_draft_v1';
+
+  var state = {
+    syncMode:false,
+    pattern:'M5\\d{2}',
+    patternError:false,
+    pairs:[],
+    warnings:[],
+    programmaticScroll:false,
+    currentProjectId:null
+  };
+
+  function $(id){ return document.getElementById(id); }
+
+  function makePane(key){
+    return {
+      key:key,
+      editor:$('editor'+key),
+      gutter:$('gutter'+key),
+      gutterInner:$('gutterInner'+key),
+      hlInner:$('hlInner'+key),
+      fileNameInput:$('fileName'+key),
+      importInput:$('fileInput'+key),
+      importBtn:$('btnImport'+key),
+      exportBtn:$('btnExport'+key),
+      lineInfo:$('lineInfo'+key)
+    };
+  }
+
+  var panes = { A: makePane('A'), B: makePane('B') };
+
+  // ---------------- gutter / line info ----------------
+  function updateGutter(pane){
+    var n = pane.editor.value.split('\n').length;
+    var arr = new Array(n);
+    for(var i=0;i<n;i++) arr[i] = i+1;
+    pane.gutterInner.textContent = arr.join('\n');
+  }
+
+  function updateLineInfo(pane){
+    var total = pane.editor.value.split('\n').length;
+    var upTo = pane.editor.value.substring(0, pane.editor.selectionStart || 0);
+    var cursorLine = upTo.split('\n').length;
+    pane.lineInfo.textContent = pane.key + ': Satır ' + cursorLine + '/' + total;
+  }
+
+  function syncGutterAndHl(pane){
+    pane.gutter.scrollTop = pane.editor.scrollTop;
+    pane.hlInner.style.transform = 'translateY(-' + pane.editor.scrollTop + 'px)';
+  }
+
+  // ---------------- sync engine ----------------
+  function findMarkers(content, regex){
+    var lines = content.split('\n');
+    var markers = [];
+    for(var i=0;i<lines.length;i++){
+      var m = lines[i].match(regex);
+      if(m) markers.push({ line:i, code:m[0].toUpperCase() });
+    }
+    return markers;
+  }
+
+  function pairMarkers(markersA, markersB){
+    var byCodeA = {}, byCodeB = {};
+    markersA.forEach(function(m){ (byCodeA[m.code] = byCodeA[m.code] || []).push(m.line); });
+    markersB.forEach(function(m){ (byCodeB[m.code] = byCodeB[m.code] || []).push(m.line); });
+    var codes = Object.keys(byCodeA).concat(Object.keys(byCodeB));
+    var uniq = {};
+    codes.forEach(function(c){ uniq[c]=true; });
+    codes = Object.keys(uniq).sort();
+    var pairs = [], warnings = [];
+    codes.forEach(function(code){
+      var as = byCodeA[code] || [];
+      var bs = byCodeB[code] || [];
+      var n = Math.min(as.length, bs.length);
+      for(var i=0;i<n;i++) pairs.push({ code:code, a:as[i], b:bs[i] });
+      if(as.length !== bs.length){
+        warnings.push(code + ': sol ' + as.length + ' kez, sağ ' + bs.length + ' kez');
+      }
+    });
+    pairs.sort(function(p,q){ return p.a - q.a; });
+    return { pairs:pairs, warnings:warnings };
+  }
+
+  function recomputePairing(){
+    var regex;
+    try{
+      regex = new RegExp(state.pattern, 'i');
+      state.patternError = false;
+      $('patternInput').classList.remove('err');
+    } catch(e){
+      state.patternError = true;
+      $('patternInput').classList.add('err');
+      renderSyncBar();
+      return;
+    }
+    var markersA = findMarkers(panes.A.editor.value, regex);
+    var markersB = findMarkers(panes.B.editor.value, regex);
+    var res = pairMarkers(markersA, markersB);
+    state.pairs = res.pairs;
+    state.warnings = res.warnings;
+    renderSyncBar();
+    renderHighlights();
+  }
+
+  function renderHighlights(){
+    ['A','B'].forEach(function(key){
+      panes[key].hlInner.innerHTML = '';
+    });
+    if(!state.syncMode) return;
+    ['A','B'].forEach(function(key){
+      var pane = panes[key];
+      var frag = document.createDocumentFragment();
+      state.pairs.forEach(function(p, idx){
+        var line = key === 'A' ? p.a : p.b;
+        var bar = document.createElement('div');
+        bar.className = 'hl-bar';
+        bar.style.top = (line * LINE_HEIGHT) + 'px';
+        var color = PAIR_COLORS[idx % PAIR_COLORS.length];
+        bar.style.background = color;
+        bar.style.borderLeft = '3px solid ' + color;
+        bar.title = p.code;
+        frag.appendChild(bar);
+      });
+      pane.hlInner.appendChild(frag);
+    });
+  }
+
+  function renderSyncBar(){
+    var summary = $('matchSummary');
+    var warnBadge = $('warnBadge');
+    if(state.patternError){
+      summary.textContent = 'Geçersiz desen';
+      summary.classList.add('error');
+      warnBadge.hidden = true;
+      $('matchList').innerHTML = '';
+      $('warnList').innerHTML = '';
+      return;
+    }
+    summary.classList.remove('error');
+    summary.textContent = state.pairs.length + ' eşleşme';
+    if(state.warnings.length){
+      warnBadge.hidden = false;
+      warnBadge.textContent = '⚠ ' + state.warnings.length;
+    } else {
+      warnBadge.hidden = true;
+    }
+    renderMatchPanel();
+  }
+
+  function renderMatchPanel(){
+    var list = $('matchList');
+    list.innerHTML = '';
+    state.pairs.forEach(function(p, idx){
+      var row = document.createElement('div');
+      row.className = 'match-row';
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.background = PAIR_COLORS[idx % PAIR_COLORS.length];
+      var label = document.createElement('span');
+      label.className = 'match-label';
+      label.textContent = p.code + '  ·  A:' + (p.a+1) + '  ↔  B:' + (p.b+1);
+      var btn = document.createElement('button');
+      btn.className = 'mini-btn';
+      btn.textContent = 'Git';
+      btn.addEventListener('click', function(){ jumpToPair(idx); });
+      row.appendChild(dot); row.appendChild(label); row.appendChild(btn);
+      list.appendChild(row);
+    });
+    var warnWrap = $('warnList');
+    warnWrap.innerHTML = '';
+    state.warnings.forEach(function(w){
+      var d = document.createElement('div');
+      d.className = 'warn-row';
+      d.textContent = '⚠ ' + w;
+      warnWrap.appendChild(d);
+    });
+  }
+
+  function jumpToPair(idx){
+    var p = state.pairs[idx];
+    if(!p) return;
+    state.programmaticScroll = true;
+    panes.A.editor.scrollTop = Math.max(0, p.a*LINE_HEIGHT - 60);
+    panes.B.editor.scrollTop = Math.max(0, p.b*LINE_HEIGHT - 60);
+    syncGutterAndHl(panes.A);
+    syncGutterAndHl(panes.B);
+    requestAnimationFrame(function(){ state.programmaticScroll = false; });
+  }
+
+  function syncFrom(sourceKey){
+    if(!state.syncMode || state.pairs.length === 0) return;
+    var dstKey = sourceKey === 'A' ? 'B' : 'A';
+    var src = panes[sourceKey], dst = panes[dstKey];
+    var srcTotal = src.editor.value.split('\n').length;
+    var dstTotal = dst.editor.value.split('\n').length;
+    var sK = sourceKey.toLowerCase(), dK = dstKey.toLowerCase();
+    var srcMarks = [0];
+    var dstMarks = [0];
+    state.pairs.forEach(function(p){ srcMarks.push(p[sK]); dstMarks.push(p[dK]); });
+    srcMarks.push(srcTotal - 1);
+    dstMarks.push(dstTotal - 1);
+
+    var currentLine = src.editor.scrollTop / LINE_HEIGHT;
+    var segIdx = srcMarks.length - 2;
+    for(var i=0;i<srcMarks.length-1;i++){
+      if(currentLine <= srcMarks[i+1]){ segIdx = i; break; }
+    }
+    var sStart = srcMarks[segIdx], sEnd = srcMarks[segIdx+1];
+    var dStart = dstMarks[segIdx], dEnd = dstMarks[segIdx+1];
+    var progress = sEnd > sStart ? (currentLine - sStart) / (sEnd - sStart) : 0;
+    progress = Math.max(0, Math.min(1, progress));
+    var targetLine = dStart + progress * (dEnd - dStart);
+
+    state.programmaticScroll = true;
+    dst.editor.scrollTop = Math.max(0, targetLine * LINE_HEIGHT);
+    syncGutterAndHl(dst);
+    requestAnimationFrame(function(){ state.programmaticScroll = false; });
+  }
+
+  // ---------------- pane wiring ----------------
+  var debounceTimers = { A:null, B:null };
+
+  function wirePane(pane){
+    pane.editor.addEventListener('scroll', function(){
+      syncGutterAndHl(pane);
+      if(state.syncMode && !state.programmaticScroll){
+        syncFrom(pane.key);
+      }
+    });
+    pane.editor.addEventListener('input', function(){
+      updateGutter(pane);
+      updateLineInfo(pane);
+      scheduleAutosave();
+      if(state.syncMode){
+        clearTimeout(debounceTimers[pane.key]);
+        debounceTimers[pane.key] = setTimeout(recomputePairing, 300);
+      }
+    });
+    ['click','keyup','select'].forEach(function(evt){
+      pane.editor.addEventListener(evt, function(){ updateLineInfo(pane); });
+    });
+    pane.importBtn.addEventListener('click', function(){ pane.importInput.click(); });
+    pane.importInput.addEventListener('change', function(e){ handleImport(pane, e); });
+    pane.exportBtn.addEventListener('click', function(){ handleExport(pane); });
+  }
+
+  function handleImport(pane, e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      pane.editor.value = reader.result;
+      pane.fileNameInput.value = file.name;
+      updateGutter(pane);
+      updateLineInfo(pane);
+      if(state.syncMode) recomputePairing();
+      scheduleAutosave();
+      toast(file.name + ' yüklendi');
+    };
+    reader.onerror = function(){ toast('Dosya okunamadı'); };
+    reader.readAsText(file, 'utf-8');
+    e.target.value = '';
+  }
+
+  function handleExport(pane){
+    var name = pane.fileNameInput.value.trim() || ('PROGRAM_' + pane.key + '.NC');
+    if(!/\.\w+$/.test(name)) name += '.nc';
+    var blob = new Blob([pane.editor.value], { type:'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+    toast(name + ' indirildi');
+  }
+
+  wirePane(panes.A);
+  wirePane(panes.B);
+
+  // ---------------- sync mode toggle / pattern ----------------
+  $('btnSyncMode').addEventListener('click', function(){
+    state.syncMode = !state.syncMode;
+    this.setAttribute('aria-pressed', String(state.syncMode));
+    this.classList.toggle('active', state.syncMode);
+    $('mainGrid').classList.toggle('sync-active', state.syncMode);
+    if(state.syncMode){ recomputePairing(); } else { renderHighlights(); }
+  });
+
+  $('patternInput').addEventListener('input', function(){
+    state.pattern = this.value;
+    if(state.syncMode) recomputePairing();
+  });
+
+  $('matchSummary').addEventListener('click', function(){
+    $('syncDetails').classList.toggle('open');
+  });
+
+  // ---------------- mobile view switch ----------------
+  $('mobileViewSwitch').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-view]');
+    if(!btn) return;
+    Array.prototype.forEach.call(this.querySelectorAll('button'), function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    $('mainGrid').setAttribute('data-mobile-view', btn.getAttribute('data-view'));
+  });
+
+  // ---------------- toast ----------------
+  var toastTimer = null;
+  function toast(msg){
+    var el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+  }
+
+  // ---------------- modals ----------------
+  function openModal(id){ $(id).classList.add('open'); }
+  function closeModal(id){ $(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-backdrop').forEach(function(bd){
+    bd.addEventListener('click', function(e){ if(e.target === bd) closeModal(bd.id); });
+    bd.querySelectorAll('[data-close]').forEach(function(btn){
+      btn.addEventListener('click', function(){ closeModal(bd.id); });
+    });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      document.querySelectorAll('.modal-backdrop.open').forEach(function(bd){ closeModal(bd.id); });
+    }
+  });
+  $('btnInfo').addEventListener('click', function(){ openModal('modalInfo'); });
+
+  // ---------------- project library ----------------
+  function loadProjects(){
+    try{ return JSON.parse(localStorage.getItem(LS_PROJECTS) || '[]'); }
+    catch(e){ return []; }
+  }
+  function saveProjects(list){
+    localStorage.setItem(LS_PROJECTS, JSON.stringify(list));
+  }
+  function formatTime(ts){
+    var d = new Date(ts);
+    return d.toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function renderLibrary(){
+    var wrap = $('libraryList');
+    wrap.innerHTML = '';
+    var list = loadProjects().sort(function(a,b){ return b.savedAt - a.savedAt; });
+    list.forEach(function(proj){
+      var row = document.createElement('div');
+      row.className = 'proj-row';
+      var pname = document.createElement('div');
+      pname.className = 'pname';
+      var n = document.createElement('div'); n.className='n'; n.textContent = proj.name;
+      var d = document.createElement('div'); d.className='d'; d.textContent = formatTime(proj.savedAt) + ' · ' + proj.fileAName + ' / ' + proj.fileBName;
+      pname.appendChild(n); pname.appendChild(d);
+      var loadBtn = document.createElement('button');
+      loadBtn.className = 'mini-btn'; loadBtn.textContent = 'Yükle';
+      loadBtn.addEventListener('click', function(){ loadProject(proj.id); });
+      var delBtn = document.createElement('button');
+      delBtn.className = 'mini-btn'; delBtn.textContent = 'Sil'; delBtn.style.color = 'var(--danger)';
+      delBtn.addEventListener('click', function(){
+        if(confirm('"' + proj.name + '" projesi silinsin mi?')){
+          deleteProject(proj.id);
+        }
+      });
+      row.appendChild(pname); row.appendChild(loadBtn); row.appendChild(delBtn);
+      wrap.appendChild(row);
+    });
+  }
+
+  function saveCurrentAsProject(name){
+    var list = loadProjects();
+    var proj = {
+      id: state.currentProjectId || ('p_' + Date.now()),
+      name: name,
+      fileAName: panes.A.fileNameInput.value,
+      fileAContent: panes.A.editor.value,
+      fileBName: panes.B.fileNameInput.value,
+      fileBContent: panes.B.editor.value,
+      pattern: state.pattern,
+      savedAt: Date.now()
+    };
+    var idx = -1;
+    for(var i=0;i<list.length;i++){ if(list[i].id === proj.id){ idx = i; break; } }
+    if(idx >= 0) list[idx] = proj; else list.push(proj);
+    saveProjects(list);
+    state.currentProjectId = proj.id;
+    toast('Proje kaydedildi: ' + name);
+  }
+
+  function loadProject(id){
+    var list = loadProjects();
+    var proj = null;
+    for(var i=0;i<list.length;i++){ if(list[i].id === id){ proj = list[i]; break; } }
+    if(!proj) return;
+    panes.A.editor.value = proj.fileAContent; panes.A.fileNameInput.value = proj.fileAName;
+    panes.B.editor.value = proj.fileBContent; panes.B.fileNameInput.value = proj.fileBName;
+    state.pattern = proj.pattern || state.pattern;
+    $('patternInput').value = state.pattern;
+    state.currentProjectId = id;
+    updateGutter(panes.A); updateGutter(panes.B);
+    updateLineInfo(panes.A); updateLineInfo(panes.B);
+    if(state.syncMode) recomputePairing(); else renderHighlights();
+    scheduleAutosave();
+    closeModal('modalLibrary');
+    toast('Proje yüklendi: ' + proj.name);
+  }
+
+  function deleteProject(id){
+    var list = loadProjects().filter(function(p){ return p.id !== id; });
+    saveProjects(list);
+    if(state.currentProjectId === id) state.currentProjectId = null;
+    renderLibrary();
+  }
+
+  $('btnLibrary').addEventListener('click', function(){ renderLibrary(); openModal('modalLibrary'); });
+  $('btnSaveProject').addEventListener('click', function(){
+    var list = loadProjects();
+    var existing = null;
+    for(var i=0;i<list.length;i++){ if(list[i].id === state.currentProjectId){ existing = list[i]; break; } }
+    $('projectNameInput').value = existing ? existing.name : '';
+    openModal('modalSaveAs');
+    setTimeout(function(){ $('projectNameInput').focus(); }, 50);
+  });
+  $('btnConfirmSave').addEventListener('click', function(){
+    var name = $('projectNameInput').value.trim();
+    if(!name){ toast('Bir proje adı girin'); return; }
+    saveCurrentAsProject(name);
+    closeModal('modalSaveAs');
+  });
+  $('projectNameInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter') $('btnConfirmSave').click();
+  });
+
+  $('btnNewProject').addEventListener('click', function(){
+    if(!confirm('Yeni proje başlatılsın mı? Kaydedilmemiş değişiklikler kaybolur.')) return;
+    panes.A.editor.value = ''; panes.A.fileNameInput.value = 'PROGRAM_A.NC';
+    panes.B.editor.value = ''; panes.B.fileNameInput.value = 'PROGRAM_B.NC';
+    state.currentProjectId = null;
+    updateGutter(panes.A); updateGutter(panes.B);
+    updateLineInfo(panes.A); updateLineInfo(panes.B);
+    if(state.syncMode) recomputePairing(); else renderHighlights();
+    scheduleAutosave();
+    toast('Yeni proje');
+  });
+
+  // ---------------- autosave draft ----------------
+  var autosaveTimer = null;
+  function scheduleAutosave(){
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(function(){
+      var draft = {
+        fileAName: panes.A.fileNameInput.value, fileAContent: panes.A.editor.value,
+        fileBName: panes.B.fileNameInput.value, fileBContent: panes.B.editor.value,
+        pattern: state.pattern, savedAt: Date.now()
+      };
+      try{ localStorage.setItem(LS_DRAFT, JSON.stringify(draft)); } catch(e){}
+      $('autosaveInfo').textContent = 'Taslak kaydedildi · ' + formatTime(draft.savedAt);
+    }, 800);
+  }
+
+  // ---------------- demo content ----------------
+  function demoA(){
+    return [
+      '%','O0001 (PROGRAM A - ANA MIL)','G54 G0 X20 Z5','G96 S180 M3','G0 X12 Z2',
+      'N50 M500 (SENKRON: TASLAMA BASLA)','G1 Z-30 F0.1','G0 X20 Z5','N120 M501 (SENKRON: TASLAMA BITTI)',
+      'G0 X0 Z0','M30',''
+    ].join('\n');
+  }
+  function demoB(){
+    return [
+      '%','O0002 (PROGRAM B - KARSI MIL)','G54 G0 X0 Z5','G97 S2000 M4','G0 Z2',
+      'N70 M500 (SENKRON: TASLAMA BASLA)','G1 Z-30 F0.1','N140 M501 (SENKRON: TASLAMA BITTI)',
+      'G0 Z5','M30',''
+    ].join('\n');
+  }
+
+  // ---------------- init ----------------
+  function init(){
+    var draftRaw = null;
+    try{ draftRaw = localStorage.getItem(LS_DRAFT); } catch(e){}
+    var draft = null;
+    if(draftRaw){ try{ draft = JSON.parse(draftRaw); } catch(e){} }
+
+    if(draft){
+      panes.A.editor.value = draft.fileAContent || '';
+      panes.A.fileNameInput.value = draft.fileAName || 'PROGRAM_A.NC';
+      panes.B.editor.value = draft.fileBContent || '';
+      panes.B.fileNameInput.value = draft.fileBName || 'PROGRAM_B.NC';
+      state.pattern = draft.pattern || state.pattern;
+      $('autosaveInfo').textContent = 'Taslak yüklendi · ' + formatTime(draft.savedAt);
+    } else {
+      panes.A.editor.value = demoA();
+      panes.B.editor.value = demoB();
+      $('autosaveInfo').textContent = 'Örnek içerik yüklendi';
+    }
+    $('patternInput').value = state.pattern;
+
+    updateGutter(panes.A); updateGutter(panes.B);
+    updateLineInfo(panes.A); updateLineInfo(panes.B);
+    syncGutterAndHl(panes.A); syncGutterAndHl(panes.B);
+
+    // optional Web Serial "send" buttons — desktop Chrome/Edge only
+    if('serial' in navigator){
+      [['A',panes.A],['B',panes.B]].forEach(function(pair){
+        var key = pair[0], pane = pair[1];
+        var btn = document.createElement('button');
+        btn.className = 'pbtn';
+        btn.title = 'Seri port ile gönder (deneysel)';
+        btn.textContent = '⇥';
+        btn.addEventListener('click', function(){ sendViaSerial(pane); });
+        pane.exportBtn.insertAdjacentElement('afterend', btn);
+      });
+    }
+  }
+
+  async function sendViaSerial(pane){
+    try{
+      var port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 9600 });
+      var writer = port.writable.getWriter();
+      var encoder = new TextEncoder();
+      await writer.write(encoder.encode(pane.editor.value));
+      writer.releaseLock();
+      await port.close();
+      toast('Seri port üzerinden gönderildi');
+    } catch(err){
+      toast('Gönderim başarısız: ' + (err && err.message ? err.message : 'bilinmeyen hata'));
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
