@@ -35,6 +35,7 @@
     --line-h:20px;
     --pad-top:6px;
     --radius:6px;
+    --gutter-w:40px;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -54,6 +55,7 @@
     padding-top:env(safe-area-inset-top);
     padding-bottom:env(safe-area-inset-bottom);
   }
+  body.compact-font{ --gutter-w:32px; }
   button{font-family:var(--sans);cursor:pointer;}
   input{font-family:var(--sans);}
   :focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
@@ -67,15 +69,15 @@
   .row1{
     display:flex;
     align-items:center;
-    gap:10px;
-    padding:9px 12px;
+    gap:6px;
+    padding:8px 10px;
+    flex-wrap:wrap;
   }
   .brand{
     display:flex;
     align-items:baseline;
-    gap:8px;
-    margin-right:auto;
-    min-width:0;
+    gap:6px;
+    flex:none;
   }
   .brand .mark{
     font-family:var(--mono);
@@ -83,23 +85,15 @@
     color:var(--accent);
     font-size:14px;
     letter-spacing:.5px;
-    flex:none;
   }
   .brand .title{
-    font-size:13px;
+    font-size:12.5px;
     font-weight:600;
     color:var(--text);
     white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .brand .subtitle{
-    font-size:10.5px;
-    color:var(--text-faint);
-    white-space:nowrap;
     display:none;
   }
-  @media(min-width:560px){ .brand .subtitle{display:inline;} }
+  @media(min-width:480px){ .brand .title{display:inline;} }
 
   .hbtn{
     background:var(--bg-elevated);
@@ -107,7 +101,7 @@
     color:var(--text-dim);
     font-size:11.5px;
     font-weight:600;
-    padding:7px 10px;
+    padding:6px 9px;
     border-radius:var(--radius);
     display:flex;
     align-items:center;
@@ -116,29 +110,26 @@
     transition:border-color .15s, color .15s;
   }
   .hbtn:hover{color:var(--text);border-color:#38424e;}
-  .hbtn.icon-only{padding:7px 8px;}
+  .hbtn.icon-only{padding:6px 8px;}
+  .hbtn .lbl{display:none;}
+  @media(min-width:460px){ .hbtn .lbl{display:inline;} }
 
-  .row2{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:8px 12px;
-    border-top:1px solid var(--border-soft);
-    flex-wrap:wrap;
-  }
+  .grow{flex:1 1 auto;}
+
   .sync-toggle{
     display:flex;
     align-items:center;
-    gap:8px;
+    gap:7px;
     background:var(--bg-elevated);
     border:1px solid var(--border);
     padding:6px 10px 6px 8px;
     border-radius:999px;
-    font-size:11.5px;
+    font-size:11px;
     font-weight:700;
     letter-spacing:.4px;
     color:var(--text-dim);
     transition:border-color .15s,color .15s,background .15s;
+    flex:none;
   }
   .sync-toggle .lamp{
     width:9px;height:9px;border-radius:50%;
@@ -157,72 +148,79 @@
     animation:pulse 1.6s ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce){ .sync-toggle.active .lamp{animation:none;} }
-  @keyframes pulse{
-    0%,100%{opacity:1;} 50%{opacity:.45;}
-  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
 
-  .pattern-field{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:10.5px;
-    color:var(--text-faint);
-  }
-  .pattern-field input{
-    width:96px;
+  #matchSummary{
     background:var(--bg-elevated);
     border:1px solid var(--border);
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:11.5px;
-    padding:5px 7px;
-    border-radius:var(--radius);
+    color:var(--text-dim);
+    font-size:10.5px;font-weight:700;
+    padding:5px 9px;
+    border-radius:999px;
+    flex:none;
   }
-  .pattern-field input.err{border-color:var(--danger);color:var(--danger);}
-
-  .sync-summary{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    margin-left:auto;
-    font-size:11px;
-  }
-  #matchSummary{
-    background:none;border:none;color:var(--text-dim);
-    font-size:11px;font-weight:600;
-    padding:4px 2px;
-    text-decoration:underline dotted;
-    text-underline-offset:3px;
-  }
-  #matchSummary.error{color:var(--danger);}
   #warnBadge{
     background:var(--danger-dim);
     color:var(--danger);
     font-size:10.5px;
     font-weight:700;
-    padding:2px 7px;
+    padding:5px 9px;
     border-radius:999px;
+    flex:none;
   }
+  #btnFit{
+    font-size:14px;
+  }
+  #btnFit.active{ color:var(--accent); border-color:var(--accent-dim); }
   .info-btn{
     background:none;border:1px solid var(--border);color:var(--text-faint);
-    width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;
+    width:24px;height:24px;border-radius:50%;font-size:11px;font-weight:700;
     display:flex;align-items:center;justify-content:center;
+    flex:none;
   }
 
-  .mobile-view-switch{
-    display:none;
+  /* ---------- ROW2: channel bar ---------- */
+  .row2{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:6px 8px;
+    border-top:1px solid var(--border-soft);
+  }
+  .pane-controls{
+    display:flex;
+    gap:4px;
+    flex:1 1 0;
+  }
+  .pane-controls[data-pane="B"]{ justify-content:flex-end; }
+  .pane-controls .pbtn{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-size:13px;
+    width:30px;height:30px;
+    border-radius:4px;
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .pane-controls .pbtn:hover{color:var(--text);border-color:#38424e;}
+  .pane-controls .pbtn.close-btn{color:var(--danger);}
+
+  .view-switch{
+    display:flex;
     gap:2px;
     background:var(--bg-elevated);
     border:1px solid var(--border);
     border-radius:var(--radius);
     padding:2px;
+    flex:none;
   }
-  .mobile-view-switch button{
+  .view-switch button{
     background:none;border:none;color:var(--text-faint);
-    font-size:10.5px;font-weight:700;padding:5px 9px;border-radius:4px;
+    font-size:11px;font-weight:700;padding:6px 11px;border-radius:4px;
   }
-  .mobile-view-switch button.active{background:var(--accent-dim);color:#1a1005;}
-  @media(max-width:640px){ .mobile-view-switch{display:flex;} }
+  .view-switch button.active{background:var(--accent-dim);color:#1a1005;}
 
   /* ---------- SYNC DETAILS PANEL ---------- */
   #syncDetails{
@@ -265,9 +263,7 @@
     background:var(--accent-dim);
     box-shadow:0 0 16px -4px var(--accent-glow) inset;
   }
-  @media(max-width:640px){
-    #mainGrid[data-mobile-view="a"],#mainGrid[data-mobile-view="b"]{grid-template-columns:1fr;}
-  }
+  #mainGrid[data-mobile-view="a"],#mainGrid[data-mobile-view="b"]{grid-template-columns:1fr;}
   #mainGrid[data-mobile-view="a"] .pane-b,
   #mainGrid[data-mobile-view="b"] .pane-a{
     display:none;
@@ -279,42 +275,6 @@
     min-width:0;
     background:var(--bg-panel);
   }
-  .pane-toolbar{
-    flex:none;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    padding:6px 8px;
-    background:var(--bg-toolbar);
-    border-bottom:1px solid var(--border-soft);
-  }
-  .pane-toolbar input.fname{
-    flex:1;
-    min-width:0;
-    background:transparent;
-    border:1px solid transparent;
-    color:var(--text);
-    font-family:var(--mono);
-    font-size:11.5px;
-    font-weight:600;
-    padding:4px 5px;
-    border-radius:4px;
-  }
-  .pane-toolbar input.fname:hover,.pane-toolbar input.fname:focus{
-    border-color:var(--border);background:var(--bg-elevated);
-  }
-  .pane-toolbar .pbtn{
-    flex:none;
-    background:var(--bg-elevated);
-    border:1px solid var(--border);
-    color:var(--text-dim);
-    font-size:14px;
-    width:28px;height:28px;
-    border-radius:4px;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .pane-toolbar .pbtn:hover{color:var(--text);border-color:#38424e;}
-
   .editor-wrap{
     position:relative;
     flex:1;
@@ -323,7 +283,7 @@
   }
   .gutter{
     flex:none;
-    width:44px;
+    width:var(--gutter-w);
     overflow:hidden;
     background:var(--bg-toolbar);
     border-right:1px solid var(--border-soft);
@@ -336,10 +296,10 @@
     white-space:pre;
     user-select:none;
   }
-  .gutter-inner{padding-right:8px;}
+  .gutter-inner{padding-right:6px;}
   .hl-wrap{
     position:absolute;
-    top:0;bottom:0;left:44px;right:0;
+    top:0;bottom:0;left:var(--gutter-w);right:0;
     overflow:hidden;
     pointer-events:none;
     padding-top:var(--pad-top);
@@ -352,8 +312,8 @@
   }
   textarea.editor{
     position:absolute;
-    top:0;bottom:0;left:44px;right:0;
-    width:calc(100% - 44px);
+    top:0;bottom:0;left:var(--gutter-w);right:0;
+    width:calc(100% - var(--gutter-w));
     height:100%;
     resize:none;
     border:none;
@@ -369,6 +329,8 @@
     overflow:auto;
     z-index:2;
   }
+  body.compact-font textarea.editor,
+  body.compact-font .gutter{ font-size:9.5px; }
   textarea.editor::selection{background:rgba(242,169,59,.25);}
 
   ::-webkit-scrollbar{width:10px;height:10px;}
@@ -381,17 +343,40 @@
     flex:none;
     display:flex;
     align-items:center;
-    gap:14px;
-    padding:6px 12px;
+    gap:10px;
+    padding:6px 10px;
     background:var(--bg-toolbar);
     border-top:1px solid var(--border);
     font-size:10.5px;
     color:var(--text-faint);
     font-family:var(--mono);
   }
-  footer .sep{width:1px;height:12px;background:var(--border);}
-  footer .grow{flex:1;}
-  #autosaveInfo{color:var(--text-faint);}
+  footer .sep{width:1px;height:12px;background:var(--border);flex:none;}
+  .foot-pane{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:1 1 0;
+    min-width:0;
+  }
+  .foot-pane .fname-mini{
+    flex:1 1 auto;
+    min-width:0;
+    background:transparent;
+    border:1px solid transparent;
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:10.5px;
+    font-weight:600;
+    padding:3px 4px;
+    border-radius:4px;
+  }
+  .foot-pane .fname-mini:hover,.foot-pane .fname-mini:focus{
+    border-color:var(--border);background:var(--bg-elevated);color:var(--text);
+  }
+  .foot-pane .lineinfo{flex:none;white-space:nowrap;}
+  #autosaveInfo{color:var(--text-faint);white-space:nowrap;display:none;}
+  @media(min-width:520px){ #autosaveInfo{display:inline;} }
 
   /* ---------- MODALS ---------- */
   .modal-backdrop{
@@ -478,29 +463,36 @@
     <div class="brand">
       <span class="mark">●NC</span>
       <span class="title">NC Sync Editör</span>
-      <span class="subtitle">Kayar Otomat Senkron Kontrol</span>
     </div>
-    <button class="hbtn" id="btnLibrary">📁 Kütüphane</button>
-    <button class="hbtn" id="btnSaveProject">💾 Kaydet</button>
+    <button class="hbtn" id="btnLibrary" title="Kütüphane">📁<span class="lbl">Kütüphane</span></button>
+    <button class="hbtn" id="btnSaveProject" title="Kaydet">💾<span class="lbl">Kaydet</span></button>
     <button class="hbtn icon-only" id="btnNewProject" title="Yeni proje">＋</button>
-  </div>
-  <div class="row2">
+    <span class="grow"></span>
     <button class="sync-toggle" id="btnSyncMode" aria-pressed="false">
       <span class="lamp"></span> SENKRON MOD
     </button>
-    <div class="pattern-field">
-      <span>kod</span>
-      <input type="text" id="patternInput" value="M5\d{2}" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="matchSummary" hidden>0 eşleşme</button>
+    <span id="warnBadge" hidden>⚠ 0</span>
+    <button class="hbtn icon-only" id="btnFit" title="Sığdır (kompakt yazı)" aria-pressed="false">⇔</button>
+    <button class="info-btn" id="btnInfo" title="Bilgi">i</button>
+  </div>
+  <div class="row2">
+    <div class="pane-controls" data-pane="A">
+      <button class="pbtn" id="btnImportA" title="Aç (.nc yükle)">📂</button>
+      <button class="pbtn close-btn" id="btnCloseA" title="Kapat">✕</button>
+      <button class="pbtn" id="btnExportA" title="İndir (.nc)">⬇</button>
+      <input type="file" id="fileInputA" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
     </div>
-    <div class="mobile-view-switch" id="mobileViewSwitch">
+    <div class="view-switch" id="mobileViewSwitch">
       <button data-view="a">A</button>
       <button data-view="both" class="active">A|B</button>
       <button data-view="b">B</button>
     </div>
-    <div class="sync-summary">
-      <button id="matchSummary">0 eşleşme</button>
-      <span id="warnBadge" hidden>⚠ 0</span>
-      <button class="info-btn" id="btnInfo" title="Bilgi">i</button>
+    <div class="pane-controls" data-pane="B">
+      <button class="pbtn" id="btnImportB" title="Aç (.nc yükle)">📂</button>
+      <button class="pbtn close-btn" id="btnCloseB" title="Kapat">✕</button>
+      <button class="pbtn" id="btnExportB" title="İndir (.nc)">⬇</button>
+      <input type="file" id="fileInputB" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
     </div>
   </div>
   <div id="syncDetails">
@@ -514,12 +506,6 @@
 <main>
   <div id="mainGrid" data-mobile-view="both">
     <section class="pane pane-a">
-      <div class="pane-toolbar">
-        <input class="fname" id="fileNameA" value="PROGRAM_A.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
-        <button class="pbtn" id="btnImportA" title="Aç (.nc yükle)">📂</button>
-        <button class="pbtn" id="btnExportA" title="İndir (.nc)">⬇</button>
-        <input type="file" id="fileInputA" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
-      </div>
       <div class="editor-wrap">
         <div class="gutter" id="gutterA"><div class="gutter-inner" id="gutterInnerA"></div></div>
         <div class="hl-wrap"><div class="hl-inner" id="hlInnerA"></div></div>
@@ -527,12 +513,6 @@
       </div>
     </section>
     <section class="pane pane-b">
-      <div class="pane-toolbar">
-        <input class="fname" id="fileNameB" value="PROGRAM_B.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
-        <button class="pbtn" id="btnImportB" title="Aç (.nc yükle)">📂</button>
-        <button class="pbtn" id="btnExportB" title="İndir (.nc)">⬇</button>
-        <input type="file" id="fileInputB" class="hidden-input" accept=".nc,.txt,.iso,.min,text/plain">
-      </div>
       <div class="editor-wrap">
         <div class="gutter" id="gutterB"><div class="gutter-inner" id="gutterInnerB"></div></div>
         <div class="hl-wrap"><div class="hl-inner" id="hlInnerB"></div></div>
@@ -543,9 +523,15 @@
 </main>
 
 <footer>
-  <span id="lineInfoA">A: Satır 1/1</span>
+  <div class="foot-pane" data-pane="A">
+    <input class="fname-mini" id="fileNameA" value="PROGRAM_A.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <span class="lineinfo" id="lineInfoA">Satır 1/1</span>
+  </div>
   <span class="sep"></span>
-  <span id="lineInfoB">B: Satır 1/1</span>
+  <div class="foot-pane" data-pane="B">
+    <input class="fname-mini" id="fileNameB" value="PROGRAM_B.NC" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <span class="lineinfo" id="lineInfoB">Satır 1/1</span>
+  </div>
   <span class="grow"></span>
   <span id="autosaveInfo">Taslak yüklendi</span>
 </footer>
@@ -583,7 +569,8 @@
   <div class="modal">
     <div class="modal-head"><h2>Nasıl çalışır</h2><button class="modal-close" data-close>×</button></div>
     <div class="modal-body">
-      <p><strong>Senkron mod:</strong> Açıkken her iki dosyada da kod deseniyle eşleşen satırlar (varsayılan <code>M5\d{2}</code>, yani M500–M599) bulunur ve aynı koda sahip satırlar birbirine eşlenir. Bir tarafı kaydırdığınızda diğer taraf, en yakın senkron noktalarına göre orantılı olarak kaydırılır ve eşleşen satır aynı yükseklikte hizalanır. Mod kapalıyken iki panel bağımsız kayar.</p>
+      <p><strong>Senkron mod:</strong> Açıkken her iki dosyada da M500–M599 aralığındaki kodlarla eşleşen satırlar bulunur ve aynı koda sahip satırlar birbirine eşlenir. Bir tarafı kaydırdığınızda diğer taraf, en yakın senkron noktalarına göre orantılı olarak kaydırılır ve eşleşen satır aynı yükseklikte hizalanır. Mod kapalıyken iki panel bağımsız kayar.</p>
+      <p><strong>Sığdır:</strong> Satırlar ekrana sığmıyorsa yazı tipini küçültüp gutter genişliğini daraltarak yatay kaydırma ihtiyacını azaltır. Satır hizalamasını bozmadığı için senkron mod ile birlikte güvenle kullanılabilir. Tek kanalı büyütmek için üstteki A / A|B / B düğmelerini de kullanabilirsiniz.</p>
       <p><strong>Eşleşme/uyarı listesi:</strong> "eşleşme" sayısına dokunarak açılır. Bir koddan bir tarafta farklı sayıda varsa (ör. solda 2, sağda 1) bu uyarı olarak listelenir — programı devreye almadan önce kontrol edin.</p>
       <p><strong>Makineye gönderme:</strong> Tarayıcı, güvenlik nedeniyle doğrudan CNC'nin RS232/Ethernet DNC hattına bağlanamaz. "⬇" ile dosyayı indirip her zamanki USB/DNC yönteminizle makineye aktarın. Masaüstü Chrome/Edge gibi Web Serial destekleyen tarayıcılarda, bir seri-DNC kablonuz varsa deneysel doğrudan gönderim düğmesi de görünür.</p>
       <p><strong>Kütüphane:</strong> Projeler bu cihazın tarayıcısında saklanır (localStorage). Farklı bir cihaza taşımak için dosyaları ayrı ayrı .nc olarak indirip diğer cihazda içe aktarabilirsiniz.</p>
@@ -607,11 +594,11 @@
   var state = {
     syncMode:false,
     pattern:'M5\\d{2}',
-    patternError:false,
     pairs:[],
     warnings:[],
     programmaticScroll:false,
-    currentProjectId:null
+    currentProjectId:null,
+    compact:false
   };
 
   function $(id){ return document.getElementById(id); }
@@ -627,6 +614,7 @@
       importInput:$('fileInput'+key),
       importBtn:$('btnImport'+key),
       exportBtn:$('btnExport'+key),
+      closeBtn:$('btnClose'+key),
       lineInfo:$('lineInfo'+key)
     };
   }
@@ -645,7 +633,7 @@
     var total = pane.editor.value.split('\n').length;
     var upTo = pane.editor.value.substring(0, pane.editor.selectionStart || 0);
     var cursorLine = upTo.split('\n').length;
-    pane.lineInfo.textContent = pane.key + ': Satır ' + cursorLine + '/' + total;
+    pane.lineInfo.textContent = 'Satır ' + cursorLine + '/' + total;
   }
 
   function syncGutterAndHl(pane){
@@ -690,12 +678,11 @@
     var regex;
     try{
       regex = new RegExp(state.pattern, 'i');
-      state.patternError = false;
-      $('patternInput').classList.remove('err');
     } catch(e){
-      state.patternError = true;
-      $('patternInput').classList.add('err');
+      state.pairs = [];
+      state.warnings = ['Kod deseni geçersiz'];
       renderSyncBar();
+      renderHighlights();
       return;
     }
     var markersA = findMarkers(panes.A.editor.value, regex);
@@ -731,18 +718,8 @@
   }
 
   function renderSyncBar(){
-    var summary = $('matchSummary');
+    $('matchSummary').textContent = state.pairs.length + ' eşleşme';
     var warnBadge = $('warnBadge');
-    if(state.patternError){
-      summary.textContent = 'Geçersiz desen';
-      summary.classList.add('error');
-      warnBadge.hidden = true;
-      $('matchList').innerHTML = '';
-      $('warnList').innerHTML = '';
-      return;
-    }
-    summary.classList.remove('error');
-    summary.textContent = state.pairs.length + ' eşleşme';
     if(state.warnings.length){
       warnBadge.hidden = false;
       warnBadge.textContent = '⚠ ' + state.warnings.length;
@@ -847,6 +824,7 @@
     pane.importBtn.addEventListener('click', function(){ pane.importInput.click(); });
     pane.importInput.addEventListener('change', function(e){ handleImport(pane, e); });
     pane.exportBtn.addEventListener('click', function(){ handleExport(pane); });
+    pane.closeBtn.addEventListener('click', function(){ handleClose(pane); });
   }
 
   function handleImport(pane, e){
@@ -879,28 +857,49 @@
     toast(name + ' indirildi');
   }
 
+  function handleClose(pane){
+    if(pane.editor.value.trim() && !confirm('Kanal ' + pane.key + ' kapatılsın mı? Kaydedilmemiş içerik silinecek.')) return;
+    pane.editor.value = '';
+    pane.fileNameInput.value = 'PROGRAM_' + pane.key + '.NC';
+    updateGutter(pane);
+    updateLineInfo(pane);
+    if(state.syncMode) recomputePairing(); else renderHighlights();
+    scheduleAutosave();
+    toast('Kanal ' + pane.key + ' kapatıldı');
+  }
+
   wirePane(panes.A);
   wirePane(panes.B);
 
-  // ---------------- sync mode toggle / pattern ----------------
+  // ---------------- sync mode toggle ----------------
   $('btnSyncMode').addEventListener('click', function(){
     state.syncMode = !state.syncMode;
     this.setAttribute('aria-pressed', String(state.syncMode));
     this.classList.toggle('active', state.syncMode);
     $('mainGrid').classList.toggle('sync-active', state.syncMode);
-    if(state.syncMode){ recomputePairing(); } else { renderHighlights(); }
-  });
-
-  $('patternInput').addEventListener('input', function(){
-    state.pattern = this.value;
-    if(state.syncMode) recomputePairing();
+    $('matchSummary').hidden = !state.syncMode;
+    if(state.syncMode){
+      recomputePairing();
+    } else {
+      renderHighlights();
+      $('warnBadge').hidden = true;
+      $('syncDetails').classList.remove('open');
+    }
   });
 
   $('matchSummary').addEventListener('click', function(){
     $('syncDetails').classList.toggle('open');
   });
 
-  // ---------------- mobile view switch ----------------
+  // ---------------- fit / compact toggle ----------------
+  $('btnFit').addEventListener('click', function(){
+    state.compact = !state.compact;
+    this.setAttribute('aria-pressed', String(state.compact));
+    this.classList.toggle('active', state.compact);
+    document.body.classList.toggle('compact-font', state.compact);
+  });
+
+  // ---------------- view switch ----------------
   $('mobileViewSwitch').addEventListener('click', function(e){
     var btn = e.target.closest('button[data-view]');
     if(!btn) return;
@@ -1003,7 +1002,6 @@
     panes.A.editor.value = proj.fileAContent; panes.A.fileNameInput.value = proj.fileAName;
     panes.B.editor.value = proj.fileBContent; panes.B.fileNameInput.value = proj.fileBName;
     state.pattern = proj.pattern || state.pattern;
-    $('patternInput').value = state.pattern;
     state.currentProjectId = id;
     updateGutter(panes.A); updateGutter(panes.B);
     updateLineInfo(panes.A); updateLineInfo(panes.B);
@@ -1101,7 +1099,6 @@
       panes.B.editor.value = demoB();
       $('autosaveInfo').textContent = 'Örnek içerik yüklendi';
     }
-    $('patternInput').value = state.pattern;
 
     updateGutter(panes.A); updateGutter(panes.B);
     updateLineInfo(panes.A); updateLineInfo(panes.B);
@@ -1110,7 +1107,7 @@
     // optional Web Serial "send" buttons — desktop Chrome/Edge only
     if('serial' in navigator){
       [['A',panes.A],['B',panes.B]].forEach(function(pair){
-        var key = pair[0], pane = pair[1];
+        var pane = pair[1];
         var btn = document.createElement('button');
         btn.className = 'pbtn';
         btn.title = 'Seri port ile gönder (deneysel)';
