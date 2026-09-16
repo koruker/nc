@@ -155,6 +155,7 @@
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.45;} }
 
   #matchSummary{
+    position:relative;
     background:var(--bg-elevated);
     border:1px solid var(--border);
     color:var(--text-dim);
@@ -163,14 +164,12 @@
     border-radius:999px;
     flex:none;
   }
-  #warnBadge{
-    background:var(--danger-dim);
-    color:var(--danger);
-    font-size:10.5px;
-    font-weight:700;
-    padding:5px 9px;
-    border-radius:999px;
-    flex:none;
+  #matchSummary.has-warn::after{
+    content:'';
+    position:absolute;top:-2px;right:-2px;
+    width:7px;height:7px;border-radius:50%;
+    background:var(--danger);
+    box-shadow:0 0 0 2px var(--bg-toolbar);
   }
   #btnFit{
     font-size:14px;
@@ -447,6 +446,19 @@
     content:'Henüz kayıtlı proje yok.';
     color:var(--text-faint);font-size:12.5px;
   }
+  .menu-list{ padding:6px 0; }
+  .menu-item{
+    display:flex;align-items:center;gap:12px;
+    width:100%;
+    background:none;border:none;
+    color:var(--text);
+    font-size:13.5px;font-weight:600;
+    padding:13px 4px;
+    border-bottom:1px solid var(--border-soft);
+    text-align:left;
+  }
+  .menu-item:last-child{border-bottom:none;}
+  .menu-item:active{background:var(--bg-panel);}
 
   /* ---------- TOAST ---------- */
   #toast{
@@ -478,18 +490,14 @@
       <span class="mark">●NC</span>
       <span class="title">NC Sync Editör</span>
     </div>
-    <button class="hbtn" id="btnLibrary" title="Kütüphane">📁<span class="lbl">Kütüphane</span></button>
-    <button class="hbtn" id="btnSaveProject" title="Kaydet">💾<span class="lbl">Kaydet</span></button>
-    <button class="hbtn icon-only" id="btnNewProject" title="Yeni proje">＋</button>
+    <button class="hbtn icon-only" id="btnMenu" title="Menü">☰</button>
     <span class="grow"></span>
     <button class="sync-toggle" id="btnSyncMode" aria-pressed="false">
       <span class="lamp"></span> SENKRON MOD
     </button>
-    <button id="matchSummary" hidden>0 eşleşme</button>
-    <span id="warnBadge" hidden>⚠ 0</span>
+    <button id="matchSummary" hidden>✓ 0</button>
     <button class="hbtn icon-only" id="btnFit" title="Sığdır (kompakt yazı)" aria-pressed="false">⇔</button>
-    <button class="hbtn icon-only" id="btnSettings" title="Ayarlar">⚙</button>
-    <button class="info-btn" id="btnInfo" title="Bilgi">i</button>
+    <button class="info-btn" id="btnInfo" title="Yardım ve ayarlar">i</button>
   </div>
   <div class="row2">
     <div class="pane-controls" data-pane="A">
@@ -591,7 +599,22 @@
       <p><strong>Makineye gönderme:</strong> Tarayıcı, güvenlik nedeniyle doğrudan CNC'nin RS232/Ethernet DNC hattına bağlanamaz. "⬇" ile dosyayı indirip her zamanki USB/DNC yönteminizle makineye aktarın. Masaüstü Chrome/Edge gibi Web Serial destekleyen tarayıcılarda, bir seri-DNC kablonuz varsa deneysel doğrudan gönderim düğmesi de görünür.</p>
       <p><strong>Kütüphane:</strong> Projeler bu cihazın tarayıcısında saklanır (localStorage). Farklı bir cihaza taşımak için dosyaları ayrı ayrı .nc olarak indirip diğer cihazda içe aktarabilirsiniz.</p>
     </div>
-    <div class="modal-actions"><button class="btn-secondary" data-close>Kapat</button></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btnOpenSettings">⚙ Ayarlar</button>
+      <button class="btn-secondary" data-close>Kapat</button>
+    </div>
+  </div>
+</div>
+
+<!-- File / project menu modal -->
+<div class="modal-backdrop" id="modalMenu">
+  <div class="modal">
+    <div class="modal-head"><h2>Menü</h2><button class="modal-close" data-close>×</button></div>
+    <div class="modal-body menu-list">
+      <button class="menu-item" id="menuLibrary">📁 <span>Kütüphane</span></button>
+      <button class="menu-item" id="menuSave">💾 <span>Kaydet</span></button>
+      <button class="menu-item" id="menuNew">＋ <span>Yeni proje</span></button>
+    </div>
   </div>
 </div>
 
@@ -624,8 +647,9 @@
 (function(){
   'use strict';
 
-  // keep in sync with CSS --line-h / --pad-top
-  var LINE_HEIGHT = 20;
+  // keep in sync with CSS --pad-top; --line-h is now driven dynamically by
+  // setFontSize() so it always scales with the current font size.
+  var LINE_HEIGHT_RATIO = 1.6; // 12.5px font → 20px line, matches the original design
   var PAIR_COLORS = ['#5ec8d8','#c792ea','#82d99f','#f5a97f','#f28fb1','#8fb4f2'];
   var LS_PROJECTS = 'ncsync_projects_v1';
   var LS_DRAFT = 'ncsync_draft_v1';
@@ -643,6 +667,7 @@
     compact:false,
     preCompactSize:12.5,
     fontSize:FONT_DEFAULTS.size,
+    lineHeight:20,
     fontMin:FONT_DEFAULTS.min,
     fontMax:FONT_DEFAULTS.max
   };
@@ -752,7 +777,7 @@
         var line = key === 'A' ? p.a : p.b;
         var bar = document.createElement('div');
         bar.className = 'hl-bar';
-        bar.style.top = (line * LINE_HEIGHT) + 'px';
+        bar.style.top = (line * state.lineHeight) + 'px';
         var color = PAIR_COLORS[idx % PAIR_COLORS.length];
         bar.style.background = color;
         bar.style.borderLeft = '3px solid ' + color;
@@ -764,14 +789,9 @@
   }
 
   function renderSyncBar(){
-    $('matchSummary').textContent = state.pairs.length + ' eşleşme';
-    var warnBadge = $('warnBadge');
-    if(state.warnings.length){
-      warnBadge.hidden = false;
-      warnBadge.textContent = '⚠ ' + state.warnings.length;
-    } else {
-      warnBadge.hidden = true;
-    }
+    var ms = $('matchSummary');
+    ms.textContent = '✓ ' + state.pairs.length;
+    ms.classList.toggle('has-warn', state.warnings.length > 0);
     renderMatchPanel();
   }
 
@@ -808,8 +828,8 @@
     var p = state.pairs[idx];
     if(!p) return;
     state.programmaticScroll = true;
-    panes.A.editor.scrollTop = Math.max(0, p.a*LINE_HEIGHT - 60);
-    panes.B.editor.scrollTop = Math.max(0, p.b*LINE_HEIGHT - 60);
+    panes.A.editor.scrollTop = Math.max(0, p.a*state.lineHeight - 60);
+    panes.B.editor.scrollTop = Math.max(0, p.b*state.lineHeight - 60);
     syncGutterAndHl(panes.A);
     syncGutterAndHl(panes.B);
     requestAnimationFrame(function(){ state.programmaticScroll = false; });
@@ -828,7 +848,7 @@
     srcMarks.push(srcTotal - 1);
     dstMarks.push(dstTotal - 1);
 
-    var currentLine = src.editor.scrollTop / LINE_HEIGHT;
+    var currentLine = src.editor.scrollTop / state.lineHeight;
     var segIdx = srcMarks.length - 2;
     for(var i=0;i<srcMarks.length-1;i++){
       if(currentLine <= srcMarks[i+1]){ segIdx = i; break; }
@@ -840,7 +860,7 @@
     var targetLine = dStart + progress * (dEnd - dStart);
 
     state.programmaticScroll = true;
-    dst.editor.scrollTop = Math.max(0, targetLine * LINE_HEIGHT);
+    dst.editor.scrollTop = Math.max(0, targetLine * state.lineHeight);
     syncGutterAndHl(dst);
     requestAnimationFrame(function(){ state.programmaticScroll = false; });
   }
@@ -928,7 +948,7 @@
       recomputePairing();
     } else {
       renderHighlights();
-      $('warnBadge').hidden = true;
+      $('matchSummary').classList.remove('has-warn');
       $('syncDetails').classList.remove('open');
     }
   });
@@ -965,14 +985,31 @@
 
   // px is clamped to [state.fontMin, state.fontMax] and snapped to a 0.5px grid
   // so pinch zoom moves in defined steps rather than continuously — this is what
-  // stops it from accidentally landing on an unreadably tiny size.
+  // stops it from accidentally landing on an unreadably tiny size. Line height
+  // scales with it (same ratio as the original 12.5px/20px design) so characters
+  // and line spacing stay proportional instead of text shrinking while rows stay
+  // the same height.
   function setFontSize(px, fromFit){
     px = Math.max(state.fontMin, Math.min(state.fontMax, px));
     px = Math.round(px * 2) / 2;
     if(px !== state.fontSize){
+      var oldLh = state.lineHeight;
+      var topLineA = panes.A.editor.scrollTop / oldLh;
+      var topLineB = panes.B.editor.scrollTop / oldLh;
+
       state.fontSize = px;
+      state.lineHeight = Math.max(9, Math.round(px * LINE_HEIGHT_RATIO));
+
       document.documentElement.style.setProperty('--editor-font-size', px + 'px');
+      document.documentElement.style.setProperty('--line-h', state.lineHeight + 'px');
       document.documentElement.style.setProperty('--gutter-w', (px <= 10 ? '32px' : '40px'));
+
+      panes.A.editor.scrollTop = Math.max(0, topLineA * state.lineHeight);
+      panes.B.editor.scrollTop = Math.max(0, topLineB * state.lineHeight);
+      syncGutterAndHl(panes.A);
+      syncGutterAndHl(panes.B);
+      renderHighlights();
+
       scheduleFontSave();
     }
     if(!fromFit && state.compact){
@@ -1032,7 +1069,8 @@
     $('fontMaxInput').value = state.fontMax;
     $('fontCurrentInfo').textContent = 'Şu anki yazı boyutu: ' + state.fontSize + 'px';
   }
-  $('btnSettings').addEventListener('click', function(){
+  $('btnOpenSettings').addEventListener('click', function(){
+    closeModal('modalInfo');
     refreshSettingsModal();
     openModal('modalSettings');
   });
@@ -1178,8 +1216,14 @@
     renderLibrary();
   }
 
-  $('btnLibrary').addEventListener('click', function(){ renderLibrary(); openModal('modalLibrary'); });
-  $('btnSaveProject').addEventListener('click', function(){
+  $('btnMenu').addEventListener('click', function(){ openModal('modalMenu'); });
+  $('menuLibrary').addEventListener('click', function(){
+    closeModal('modalMenu');
+    renderLibrary();
+    openModal('modalLibrary');
+  });
+  $('menuSave').addEventListener('click', function(){
+    closeModal('modalMenu');
     var list = loadProjects();
     var existing = null;
     for(var i=0;i<list.length;i++){ if(list[i].id === state.currentProjectId){ existing = list[i]; break; } }
@@ -1197,7 +1241,8 @@
     if(e.key === 'Enter') $('btnConfirmSave').click();
   });
 
-  $('btnNewProject').addEventListener('click', function(){
+  $('menuNew').addEventListener('click', function(){
+    closeModal('modalMenu');
     if(!confirm('Yeni proje başlatılsın mı? Kaydedilmemiş değişiklikler kaybolur.')) return;
     panes.A.editor.value = ''; panes.A.fileNameInput.value = 'PROGRAM_A.NC';
     panes.B.editor.value = ''; panes.B.fileNameInput.value = 'PROGRAM_B.NC';
