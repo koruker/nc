@@ -36,6 +36,7 @@
     --pad-top:6px;
     --radius:6px;
     --gutter-w:40px;
+    --editor-font-size:12.5px;
   }
   *{box-sizing:border-box;}
   html,body{
@@ -47,15 +48,18 @@
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior:none;
   }
+  /* position:fixed + inset:0 pins the app exactly to the visual viewport so the
+     whole page can never rubber-band/bounce on iOS — that bounce was what caused
+     the footer to momentarily overlap editor content during a scroll gesture. */
   body{
+    position:fixed;
+    inset:0;
     display:flex;
     flex-direction:column;
-    height:100vh;
-    height:100dvh;
+    overflow:hidden;
     padding-top:env(safe-area-inset-top);
     padding-bottom:env(safe-area-inset-bottom);
   }
-  body.compact-font{ --gutter-w:32px; }
   button{font-family:var(--sans);cursor:pointer;}
   input{font-family:var(--sans);}
   :focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
@@ -289,12 +293,13 @@
     border-right:1px solid var(--border-soft);
     color:var(--text-faint);
     font-family:var(--mono);
-    font-size:12.5px;
+    font-size:var(--editor-font-size);
     line-height:var(--line-h);
     padding-top:var(--pad-top);
     text-align:right;
     white-space:pre;
     user-select:none;
+    overscroll-behavior:contain;
   }
   .gutter-inner{padding-right:6px;}
   .hl-wrap{
@@ -322,15 +327,15 @@
     color:var(--text);
     caret-color:var(--accent);
     font-family:var(--mono);
-    font-size:12.5px;
+    font-size:var(--editor-font-size);
     line-height:var(--line-h);
     padding:var(--pad-top) 10px 10px 10px;
     white-space:pre;
     overflow:auto;
+    overscroll-behavior:contain;
     z-index:2;
+    touch-action:pan-x pan-y;
   }
-  body.compact-font textarea.editor,
-  body.compact-font .gutter{ font-size:9.5px; }
   textarea.editor::selection{background:rgba(242,169,59,.25);}
 
   ::-webkit-scrollbar{width:10px;height:10px;}
@@ -407,10 +412,19 @@
   .modal-close{background:none;border:none;color:var(--text-faint);font-size:18px;line-height:1;}
   .modal-body{padding:14px 16px;overflow-y:auto;}
   .modal-body p{font-size:12.5px;line-height:1.6;color:var(--text-dim);margin:0 0 10px;}
-  .modal-body input[type=text]{
+  .modal-body input[type=text],
+  .modal-body input[type=number]{
     width:100%;background:var(--bg-panel);border:1px solid var(--border);
     color:var(--text);font-size:13px;padding:9px 10px;border-radius:6px;
     font-family:var(--sans);
+  }
+  .settings-row{
+    display:flex;align-items:center;gap:10px;margin-bottom:10px;
+  }
+  .settings-row label{flex:none;width:88px;font-size:12.5px;color:var(--text-dim);}
+  .settings-row input{flex:1;}
+  .current-size-info{
+    font-family:var(--mono);font-size:11px;color:var(--text-faint);margin:6px 0 0;
   }
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border-soft);}
   .btn-primary{
@@ -474,6 +488,7 @@
     <button id="matchSummary" hidden>0 eşleşme</button>
     <span id="warnBadge" hidden>⚠ 0</span>
     <button class="hbtn icon-only" id="btnFit" title="Sığdır (kompakt yazı)" aria-pressed="false">⇔</button>
+    <button class="hbtn icon-only" id="btnSettings" title="Ayarlar">⚙</button>
     <button class="info-btn" id="btnInfo" title="Bilgi">i</button>
   </div>
   <div class="row2">
@@ -570,12 +585,36 @@
     <div class="modal-head"><h2>Nasıl çalışır</h2><button class="modal-close" data-close>×</button></div>
     <div class="modal-body">
       <p><strong>Senkron mod:</strong> Açıkken her iki dosyada da M500–M599 aralığındaki kodlarla eşleşen satırlar bulunur ve aynı koda sahip satırlar birbirine eşlenir. Bir tarafı kaydırdığınızda diğer taraf, en yakın senkron noktalarına göre orantılı olarak kaydırılır ve eşleşen satır aynı yükseklikte hizalanır. Mod kapalıyken iki panel bağımsız kayar.</p>
-      <p><strong>Sığdır:</strong> Satırlar ekrana sığmıyorsa yazı tipini küçültüp gutter genişliğini daraltarak yatay kaydırma ihtiyacını azaltır. Satır hizalamasını bozmadığı için senkron mod ile birlikte güvenle kullanılabilir. Tek kanalı büyütmek için üstteki A / A|B / B düğmelerini de kullanabilirsiniz.</p>
+      <p><strong>Sığdır:</strong> Yazı boyutunu tek dokunuşla kompakt boyuta küçültüp normale döndürür. Satır hizalamasını bozmadığı için senkron mod ile birlikte güvenle kullanılabilir. Tek kanalı büyütmek için üstteki A / A|B / B düğmelerini de kullanabilirsiniz.</p>
+      <p><strong>İki parmakla yakınlaştırma:</strong> Editör üzerinde iki parmakla açıp kapatarak yazı boyutunu her iki panelde birden, aynı anda ve kademeli olarak değiştirebilirsiniz. Ne kadar küçülüp büyüyebileceği ⚙ Ayarlar'daki minimum/maksimum sınırlarla kontrol edilir, böylece yanlışlıkla okunamayacak kadar küçülmez.</p>
       <p><strong>Eşleşme/uyarı listesi:</strong> "eşleşme" sayısına dokunarak açılır. Bir koddan bir tarafta farklı sayıda varsa (ör. solda 2, sağda 1) bu uyarı olarak listelenir — programı devreye almadan önce kontrol edin.</p>
       <p><strong>Makineye gönderme:</strong> Tarayıcı, güvenlik nedeniyle doğrudan CNC'nin RS232/Ethernet DNC hattına bağlanamaz. "⬇" ile dosyayı indirip her zamanki USB/DNC yönteminizle makineye aktarın. Masaüstü Chrome/Edge gibi Web Serial destekleyen tarayıcılarda, bir seri-DNC kablonuz varsa deneysel doğrudan gönderim düğmesi de görünür.</p>
       <p><strong>Kütüphane:</strong> Projeler bu cihazın tarayıcısında saklanır (localStorage). Farklı bir cihaza taşımak için dosyaları ayrı ayrı .nc olarak indirip diğer cihazda içe aktarabilirsiniz.</p>
     </div>
     <div class="modal-actions"><button class="btn-secondary" data-close>Kapat</button></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="modalSettings">
+  <div class="modal">
+    <div class="modal-head"><h2>Ayarlar</h2><button class="modal-close" data-close>×</button></div>
+    <div class="modal-body">
+      <p>İki parmakla yakınlaştırmanın izin verdiği en küçük ve en büyük yazı boyutu (px). Yanlışlıkla minicik veya devasa olmasını buradan sınırlayabilirsiniz.</p>
+      <div class="settings-row">
+        <label for="fontMinInput">Minimum</label>
+        <input type="number" id="fontMinInput" min="6" max="32" step="0.5">
+      </div>
+      <div class="settings-row">
+        <label for="fontMaxInput">Maksimum</label>
+        <input type="number" id="fontMaxInput" min="6" max="32" step="0.5">
+      </div>
+      <p id="fontCurrentInfo" class="current-size-info"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btnResetFontPrefs">Varsayılana dön</button>
+      <button class="btn-primary" id="btnConfirmSettings">Kaydet</button>
+    </div>
   </div>
 </div>
 
@@ -590,6 +629,9 @@
   var PAIR_COLORS = ['#5ec8d8','#c792ea','#82d99f','#f5a97f','#f28fb1','#8fb4f2'];
   var LS_PROJECTS = 'ncsync_projects_v1';
   var LS_DRAFT = 'ncsync_draft_v1';
+  var LS_FONTPREFS = 'ncsync_fontprefs_v1';
+  var FONT_ABS_MIN = 6, FONT_ABS_MAX = 32;
+  var FONT_DEFAULTS = { min:8, max:20, size:12.5 };
 
   var state = {
     syncMode:false,
@@ -598,7 +640,11 @@
     warnings:[],
     programmaticScroll:false,
     currentProjectId:null,
-    compact:false
+    compact:false,
+    preCompactSize:12.5,
+    fontSize:FONT_DEFAULTS.size,
+    fontMin:FONT_DEFAULTS.min,
+    fontMax:FONT_DEFAULTS.max
   };
 
   function $(id){ return document.getElementById(id); }
@@ -891,12 +937,126 @@
     $('syncDetails').classList.toggle('open');
   });
 
-  // ---------------- fit / compact toggle ----------------
+  // ---------------- font size: fit toggle + pinch zoom ----------------
+  var fontSaveTimer = null;
+  function scheduleFontSave(){
+    clearTimeout(fontSaveTimer);
+    fontSaveTimer = setTimeout(function(){
+      try{
+        localStorage.setItem(LS_FONTPREFS, JSON.stringify({
+          min: state.fontMin, max: state.fontMax, size: state.fontSize
+        }));
+      } catch(e){}
+    }, 400);
+  }
+
+  function loadFontPrefs(){
+    try{
+      var raw = localStorage.getItem(LS_FONTPREFS);
+      if(!raw) return FONT_DEFAULTS;
+      var p = JSON.parse(raw);
+      return {
+        min: (typeof p.min === 'number') ? p.min : FONT_DEFAULTS.min,
+        max: (typeof p.max === 'number') ? p.max : FONT_DEFAULTS.max,
+        size: (typeof p.size === 'number') ? p.size : FONT_DEFAULTS.size
+      };
+    } catch(e){ return FONT_DEFAULTS; }
+  }
+
+  // px is clamped to [state.fontMin, state.fontMax] and snapped to a 0.5px grid
+  // so pinch zoom moves in defined steps rather than continuously — this is what
+  // stops it from accidentally landing on an unreadably tiny size.
+  function setFontSize(px, fromFit){
+    px = Math.max(state.fontMin, Math.min(state.fontMax, px));
+    px = Math.round(px * 2) / 2;
+    if(px !== state.fontSize){
+      state.fontSize = px;
+      document.documentElement.style.setProperty('--editor-font-size', px + 'px');
+      document.documentElement.style.setProperty('--gutter-w', (px <= 10 ? '32px' : '40px'));
+      scheduleFontSave();
+    }
+    if(!fromFit && state.compact){
+      state.compact = false;
+      $('btnFit').classList.remove('active');
+      $('btnFit').setAttribute('aria-pressed', 'false');
+    }
+  }
+
   $('btnFit').addEventListener('click', function(){
-    state.compact = !state.compact;
+    if(state.compact){
+      setFontSize(state.preCompactSize, true);
+      state.compact = false;
+    } else {
+      state.preCompactSize = state.fontSize;
+      setFontSize(Math.max(state.fontMin, 9.5), true);
+      state.compact = true;
+    }
     this.setAttribute('aria-pressed', String(state.compact));
     this.classList.toggle('active', state.compact);
-    document.body.classList.toggle('compact-font', state.compact);
+  });
+
+  // two-finger pinch over either editor resizes both panes' text together
+  var pinch = { active:false, startDist:0, startSize:12.5 };
+  function touchDist(touches){
+    var dx = touches[0].clientX - touches[1].clientX;
+    var dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+  var mainGridEl = $('mainGrid');
+  mainGridEl.addEventListener('touchstart', function(e){
+    if(e.touches.length === 2){
+      pinch.active = true;
+      pinch.startDist = touchDist(e.touches);
+      pinch.startSize = state.fontSize;
+    }
+  }, { passive:true });
+  mainGridEl.addEventListener('touchmove', function(e){
+    if(pinch.active && e.touches.length === 2){
+      e.preventDefault();
+      var dist = touchDist(e.touches);
+      if(pinch.startDist > 0){
+        var ratio = dist / pinch.startDist;
+        setFontSize(pinch.startSize * ratio);
+      }
+    }
+  }, { passive:false });
+  function endPinch(e){
+    if(e.touches.length < 2) pinch.active = false;
+  }
+  mainGridEl.addEventListener('touchend', endPinch);
+  mainGridEl.addEventListener('touchcancel', endPinch);
+
+  // ---------------- settings modal (font min/max) ----------------
+  function refreshSettingsModal(){
+    $('fontMinInput').value = state.fontMin;
+    $('fontMaxInput').value = state.fontMax;
+    $('fontCurrentInfo').textContent = 'Şu anki yazı boyutu: ' + state.fontSize + 'px';
+  }
+  $('btnSettings').addEventListener('click', function(){
+    refreshSettingsModal();
+    openModal('modalSettings');
+  });
+  $('btnConfirmSettings').addEventListener('click', function(){
+    var min = parseFloat($('fontMinInput').value);
+    var max = parseFloat($('fontMaxInput').value);
+    if(isNaN(min) || isNaN(max)){ toast('Geçerli bir sayı girin'); return; }
+    min = Math.max(FONT_ABS_MIN, Math.min(FONT_ABS_MAX, min));
+    max = Math.max(FONT_ABS_MIN, Math.min(FONT_ABS_MAX, max));
+    if(min >= max){ toast('Minimum, maksimumdan küçük olmalı'); return; }
+    state.fontMin = min;
+    state.fontMax = max;
+    setFontSize(state.fontSize, true);
+    scheduleFontSave();
+    closeModal('modalSettings');
+    toast('Ayarlar kaydedildi');
+  });
+  $('btnResetFontPrefs').addEventListener('click', function(){
+    state.fontMin = FONT_DEFAULTS.min;
+    state.fontMax = FONT_DEFAULTS.max;
+    setFontSize(FONT_DEFAULTS.size, true);
+    refreshSettingsModal();
+    scheduleFontSave();
+    toast('Varsayılana döndürüldü');
   });
 
   // ---------------- view switch ----------------
@@ -1082,6 +1242,12 @@
 
   // ---------------- init ----------------
   function init(){
+    var fp = loadFontPrefs();
+    state.fontMin = fp.min;
+    state.fontMax = fp.max;
+    setFontSize(fp.size, true);
+    state.preCompactSize = state.fontSize;
+
     var draftRaw = null;
     try{ draftRaw = localStorage.getItem(LS_DRAFT); } catch(e){}
     var draft = null;
