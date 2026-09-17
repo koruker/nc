@@ -42,28 +42,17 @@
   html,body{
     height:100%;
     margin:0;
+    overflow:hidden;
     background:var(--bg);
     color:var(--text);
     font-family:var(--sans);
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior:none;
-    /* iOS Safari ignores viewport user-scalable=no for pinch gestures — this is
-       the setting that actually blocks native pinch/double-tap page zoom. Without
-       it, a two-finger touch landing partly outside the textarea (e.g. on the
-       gutter) let Safari zoom the whole page natively, which is what caused both
-       the background overlap glitch and single-finger drags panning the zoomed
-       page instead of scrolling the editor. */
     touch-action:pan-x pan-y;
   }
-  /* position:fixed + inset:0 pins the app exactly to the visual viewport so the
-     whole page can never rubber-band/bounce on iOS — that bounce was what caused
-     the footer to momentarily overlap editor content during a scroll gesture. */
   body{
-    position:fixed;
-    inset:0;
     display:flex;
     flex-direction:column;
-    overflow:hidden;
     padding-top:env(safe-area-inset-top);
     padding-bottom:env(safe-area-inset-bottom);
   }
@@ -76,6 +65,10 @@
     flex:none;
     background:var(--bg-toolbar);
     border-bottom:1px solid var(--border);
+    position:relative;
+    z-index:5;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
   }
   .row1{
     display:flex;
@@ -290,6 +283,8 @@
     flex:1;
     min-height:0;
     display:flex;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
   }
   .gutter{
     flex:none;
@@ -361,6 +356,10 @@
     font-size:10.5px;
     color:var(--text-faint);
     font-family:var(--mono);
+    position:relative;
+    z-index:5;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
   }
   footer .sep{width:1px;height:12px;background:var(--border);flex:none;}
   .foot-pane{
@@ -1039,7 +1038,11 @@
     this.classList.toggle('active', state.compact);
   });
 
-  // two-finger pinch over either editor resizes both panes' text together
+  // Two-finger pinch over either editor resizes both panes' text together.
+  // The touchmove listener is only attached to the DOM for the exact duration
+  // of an active 2-finger gesture (added on touchstart, removed on touchend) —
+  // a permanently-attached non-passive touchmove listener here was interfering
+  // with the browser's normal single-finger scroll handling for the textareas.
   var pinch = { active:false, startDist:0, startSize:12.5 };
   function touchDist(touches){
     var dx = touches[0].clientX - touches[1].clientX;
@@ -1047,28 +1050,35 @@
     return Math.sqrt(dx*dx + dy*dy);
   }
   var mainGridEl = $('mainGrid');
-  mainGridEl.addEventListener('touchstart', function(e){
+
+  function onPinchMove(e){
     if(e.touches.length === 2){
-      pinch.active = true;
-      pinch.startDist = touchDist(e.touches);
-      pinch.startSize = state.fontSize;
-    }
-  }, { passive:true });
-  mainGridEl.addEventListener('touchmove', function(e){
-    if(pinch.active && e.touches.length === 2){
       e.preventDefault();
       var dist = touchDist(e.touches);
       if(pinch.startDist > 0){
-        var ratio = dist / pinch.startDist;
-        setFontSize(pinch.startSize * ratio);
+        setFontSize(pinch.startSize * (dist / pinch.startDist));
       }
     }
-  }, { passive:false });
-  function endPinch(e){
-    if(e.touches.length < 2) pinch.active = false;
   }
-  mainGridEl.addEventListener('touchend', endPinch);
-  mainGridEl.addEventListener('touchcancel', endPinch);
+  function endPinch(){
+    if(pinch.active){
+      pinch.active = false;
+      mainGridEl.removeEventListener('touchmove', onPinchMove);
+    }
+  }
+
+  mainGridEl.addEventListener('touchstart', function(e){
+    if(e.touches.length === 2 && !pinch.active){
+      pinch.active = true;
+      pinch.startDist = touchDist(e.touches);
+      pinch.startSize = state.fontSize;
+      mainGridEl.addEventListener('touchmove', onPinchMove, { passive:false });
+    }
+  }, { passive:true });
+  mainGridEl.addEventListener('touchend', function(e){
+    if(e.touches.length < 2) endPinch();
+  }, { passive:true });
+  mainGridEl.addEventListener('touchcancel', endPinch, { passive:true });
 
   // ---------------- settings modal (font min/max) ----------------
   function refreshSettingsModal(){
