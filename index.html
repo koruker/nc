@@ -47,6 +47,13 @@
     font-family:var(--sans);
     -webkit-tap-highlight-color:transparent;
     overscroll-behavior:none;
+    /* iOS Safari ignores viewport user-scalable=no for pinch gestures — this is
+       the setting that actually blocks native pinch/double-tap page zoom. Without
+       it, a two-finger touch landing partly outside the textarea (e.g. on the
+       gutter) let Safari zoom the whole page natively, which is what caused both
+       the background overlap glitch and single-finger drags panning the zoomed
+       page instead of scrolling the editor. */
+    touch-action:pan-x pan-y;
   }
   /* position:fixed + inset:0 pins the app exactly to the visual viewport so the
      whole page can never rubber-band/bounce on iOS — that bounce was what caused
